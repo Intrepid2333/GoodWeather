@@ -1,4 +1,4 @@
-package com.goodweather.android.logic
+package com.goodweather.android.logic.model
 import com.google.gson.annotations.SerializedName
 
 data class PlaceResponse(val status: String, val places: List<Place>)

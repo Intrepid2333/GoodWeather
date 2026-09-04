@@ -1,5 +1,7 @@
 package com.goodweather.android.ui.place
 
+import android.content.Intent
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -7,11 +9,11 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.goodweather.android.R
-import com.goodweather.android.logic.Place
+import com.goodweather.android.logic.model.Place
+import com.goodweather.android.ui.weather.WeatherActivity
 
-class PlaceAdapter(private val fragment: Fragment, private val placeList: List<Place>):
+class PlaceAdapter(private val fragment: PlaceFragment, private val placeList: List<Place>):
     RecyclerView.Adapter<PlaceAdapter.ViewHolder>(){
-
     inner class ViewHolder(view: View): RecyclerView.ViewHolder(view){
         val placeName: TextView = view.findViewById(R.id.placeName)
         val placeAddress: TextView = view.findViewById(R.id.placeAddress)
@@ -19,7 +21,35 @@ class PlaceAdapter(private val fragment: Fragment, private val placeList: List<P
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view= LayoutInflater.from(parent.context).inflate(R.layout.place_item,parent,false)
-        return ViewHolder(view)
+        val holder= ViewHolder(view)
+        holder.itemView.setOnClickListener {
+            val position = holder.bindingAdapterPosition
+
+            if (position == RecyclerView.NO_POSITION) {
+                return@setOnClickListener
+            }
+
+            val place=placeList[position]
+
+            val activity=fragment.activity
+            if(activity is WeatherActivity){
+                activity.drawerLayout.closeDrawers()
+                activity.viewModel.locationLng=place.location.lng
+                activity.viewModel.locationLat=place.location.lat
+                activity.viewModel.placeName=place.name
+                activity.refreshWeather()
+            }else{
+                val intent = Intent(parent.context, WeatherActivity::class.java).apply{
+                    putExtra("location_lng", place.location.lng)
+                    putExtra("location_lat", place.location.lat)
+                    putExtra("place_name", place.name)
+                }
+                fragment.startActivity(intent)
+                activity?.finish()
+            }
+            fragment.viewModel.savePlace(place)
+        }
+        return holder
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {

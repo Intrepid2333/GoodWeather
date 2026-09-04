@@ -29,6 +29,6 @@
             android:textColor="?android:attr/textColorSecondary"
             android:textSize="14sp"/>
 
-    </LinearLayout>S
+    </LinearLayout>
     
 </com.google.android.material.card.MaterialCardView>

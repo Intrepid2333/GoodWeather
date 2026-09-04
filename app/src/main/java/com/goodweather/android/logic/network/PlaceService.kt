@@ -1,7 +1,7 @@
 package com.goodweather.android.logic.network
 
 import com.goodweather.android.GoodWeatherApplication
-import com.goodweather.android.logic.PlaceResponse
+import com.goodweather.android.logic.model.PlaceResponse
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Query
