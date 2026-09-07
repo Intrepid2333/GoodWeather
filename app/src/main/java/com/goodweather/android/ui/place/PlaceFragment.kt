@@ -41,7 +41,6 @@ class PlaceFragment: Fragment() {
                 putExtra("location_lat", place.location.lat)
                 putExtra("place_name", place.name)
             }
-            Log.e("PlaceFragment", place.name)
             startActivity(intent)
             activity?.finish()
             return

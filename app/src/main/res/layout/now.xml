@@ -16,7 +16,7 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_marginStart="15dp"
-            android:layout_gravity="center_vertical"
+            android:layout_gravity="center_vertical|start"
             android:background="@drawable/ic_home" />
 
         <TextView
@@ -30,6 +30,14 @@
             android:ellipsize="middle"
             android:textColor="#fff"
             android:textSize="22sp" />
+
+        <Button
+            android:id="@+id/aiBtn"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginEnd="15dp"
+            android:layout_gravity="center_vertical|end"
+            android:background="@drawable/ic_ai" />
 
     </FrameLayout>
 

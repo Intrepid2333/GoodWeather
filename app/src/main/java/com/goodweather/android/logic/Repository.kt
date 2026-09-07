@@ -27,20 +27,9 @@ object Repository {
 
     fun refreshWeather(lng: String, lat: String) = fire(Dispatchers.IO) {
         coroutineScope {
-            val dailyResponse =
-                GoodWeatherNetwork.getDailyWeather(lng, lat)
+            val dailyResponse = GoodWeatherNetwork.getDailyWeather(lng, lat)
             delay(1000)
-            val realtimeResponse =
-                GoodWeatherNetwork.getRealtimeWeather(lng, lat)
-
-//            val deferredRealtime = async {
-//                GoodWeatherNetwork.getRealtimeWeather(lng, lat)
-//            }
-//            val deffedDaily = async {
-//                GoodWeatherNetwork.getDailyWeather(lng, lat)
-//            }
-//            val realtimeResponse = deferredRealtime.await()
-//            val dailyResponse = deffedDaily.await()
+            val realtimeResponse = GoodWeatherNetwork.getRealtimeWeather(lng, lat)
 
             if (realtimeResponse.status == "ok" && dailyResponse.status == "ok") {
                 val weather = Weather(realtimeResponse.result.realtime, dailyResponse.result.daily)
@@ -68,6 +57,24 @@ object Repository {
             }
             emit(result)
         }
+
+    suspend fun searchPlaceDirect(query: String): Result<List<Place>> {
+        return try {
+            val placeResponse = GoodWeatherNetwork.searchPlaces(query)
+
+            if (placeResponse.status == "ok") {
+                Result.success(placeResponse.places)
+            } else {
+                Result.failure(
+                    RuntimeException(
+                        "response status is ${placeResponse.status}"
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
 
 

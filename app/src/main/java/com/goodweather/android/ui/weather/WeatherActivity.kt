@@ -8,6 +8,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
@@ -22,15 +24,24 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.goodweather.android.R
+import com.goodweather.android.logic.model.ChatMessage
 import com.goodweather.android.logic.model.Weather
 import com.goodweather.android.logic.model.getSky
+import com.goodweather.android.ui.ai.AIViewModel
+import com.goodweather.android.ui.ai.ChatAdapter
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.text.SimpleDateFormat
 import java.util.Locale
 
 class WeatherActivity : AppCompatActivity() {
+    private var currentWeather: Weather? = null
     val viewModel by lazy { ViewModelProvider(this).get(WeatherViewModel::class.java) }
+    private val aiViewModel by lazy { ViewModelProvider(this).get(AIViewModel::class.java) }
     private lateinit var swipeRefresh: SwipeRefreshLayout
     public lateinit var drawerLayout: DrawerLayout
 
@@ -42,6 +53,10 @@ class WeatherActivity : AppCompatActivity() {
         swipeRefresh = findViewById(R.id.swipeRefresh)
         drawerLayout=findViewById<DrawerLayout>(R.id.drawerLayout)
         val navBtn=findViewById<Button>(R.id.navBtn)
+        val aiBtn=findViewById<Button>(R.id.aiBtn)
+        aiBtn.setOnClickListener {
+            showAIChat()
+        }
         navBtn.setOnClickListener {
             drawerLayout.openDrawer(GravityCompat.START)
         }
@@ -74,6 +89,7 @@ class WeatherActivity : AppCompatActivity() {
             val weather = result.getOrNull()
             if (weather!=null){
                 showWeatherInfo(weather)
+                currentWeather = weather
             }else{
                 Toast.makeText(this, "无法成功获取天气信息", Toast.LENGTH_SHORT).show()
                 result.exceptionOrNull()?.printStackTrace()
@@ -106,7 +122,7 @@ class WeatherActivity : AppCompatActivity() {
         val ultravioletText = findViewById<TextView>(R.id.ultravioletText)
         val carWashingText = findViewById<TextView>(R.id.carWashingText)
         Log.e("WeatherActivity", viewModel.placeName)
-        placeName.text=viewModel.placeName
+        placeName.text=viewModel.placeName.split(" ").last()
         val realtime = weather.realtime
         val daily = weather.daily
 
@@ -147,5 +163,58 @@ class WeatherActivity : AppCompatActivity() {
         carWashingText.text = lifeIndex.carWashing[0].desc
         weatherLayout.visibility = View.VISIBLE
 
+    }
+
+    fun showAIChat(){
+        val dialog = BottomSheetDialog(this)
+        val view = layoutInflater.inflate(
+            R.layout.ai_chat,
+            null
+        )
+        dialog.setContentView(view)
+        val bottomSheet =
+            dialog.findViewById<View>(
+                com.google.android.material.R.id.design_bottom_sheet
+            )
+        bottomSheet?.let {
+            val behavior = BottomSheetBehavior.from(it)
+            val height = (resources.displayMetrics.heightPixels * 0.8).toInt()
+            it.layoutParams.height = height
+            behavior.state = BottomSheetBehavior.STATE_EXPANDED
+            behavior.isDraggable = true
+        }
+        dialog.show()
+
+        // 创建 Adapter
+        val adapter = ChatAdapter(mutableListOf())
+        val recyclerView = view.findViewById<RecyclerView>(R.id.recyclerViewChat)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = adapter
+
+        // 观察聊天消息
+        aiViewModel.messages.observe(this) { messages ->
+            adapter.updateMessages(messages)
+            if (messages.isNotEmpty()) {
+                recyclerView.scrollToPosition(
+                    messages.size - 1
+                )
+            }
+        }
+        val etMessage = view.findViewById<EditText>(R.id.etMessage)
+        val btnSend = view.findViewById<ImageButton>(R.id.btnSend)
+
+        aiViewModel.isLoading.observe(this) { isLoading ->
+            btnSend.isEnabled = !isLoading
+        }
+
+
+        btnSend.setOnClickListener {
+            val message = etMessage.text.toString().trim()
+            if (message.isNotEmpty()) {
+                aiViewModel.sendMessage(message, currentWeather)
+                etMessage.text.clear()
+            }
+
+        }
     }
 }

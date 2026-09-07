@@ -22,20 +22,13 @@ object GoodWeatherNetwork {
 
     private suspend fun <T> Call<T>.await(): T {
         return suspendCoroutine { continuation ->
-
             enqueue(object : Callback<T> {
-
                 override fun onResponse(
                     call: Call<T>,
                     response: Response<T>
                 ) {
-                    Log.d("WeatherAPI", "URL = ${call.request().url}")
-                    Log.d("WeatherAPI", "code = ${response.code()}")
-
                     if (response.isSuccessful) {
-
                         val body = response.body()
-
                         if (body != null) {
                             continuation.resume(body)
                         } else {
@@ -43,15 +36,8 @@ object GoodWeatherNetwork {
                                 RuntimeException("response body is null")
                             )
                         }
-
                     } else {
                         val error = response.errorBody()?.string()
-
-                        Log.e(
-                            "WeatherAPI",
-                            "HTTP ${response.code()}, error = $error"
-                        )
-
                         continuation.resumeWithException(
                             RuntimeException(
                                 "HTTP ${response.code()}: ${response.errorBody()?.string()}"
@@ -59,7 +45,6 @@ object GoodWeatherNetwork {
                         )
                     }
                 }
-
                 override fun onFailure(
                     call: Call<T>,
                     t: Throwable
